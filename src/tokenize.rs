@@ -42,10 +42,10 @@ pub enum TokenizeError {
     /// String was never completed
     UnclosedQuotes,
     /// Character is not part of a JSON token
-    CharNotRecognized(char)
+    CharNotRecognized(char),
 }
 
-pub fn tokenize(input: &str) -> Result<Vec<Token>, TokenizeError>{
+pub fn tokenize(input: &str) -> Result<Vec<Token>, TokenizeError> {
     let chars: Vec<_> = input.chars().collect();
     let mut index = 0;
 
@@ -75,13 +75,18 @@ fn make_token(chars: &[char], index: &mut usize) -> Result<Token, TokenizeError>
         'f' => tokenize_literal(chars, index, "false", Token::False)?,
         c if c.is_ascii_digit() => tokenize_float(chars, index)?,
         '"' => tokenize_string(chars, index)?,
-        ch => return Err(TokenizeError::CharNotRecognized(ch))
+        ch => return Err(TokenizeError::CharNotRecognized(ch)),
     };
 
     Ok(token)
 }
 
-fn tokenize_literal(chars: &[char], index: &mut usize, literal: &str, token: Token) -> Result<Token, TokenizeError> {
+fn tokenize_literal(
+    chars: &[char],
+    index: &mut usize,
+    literal: &str,
+    token: Token,
+) -> Result<Token, TokenizeError> {
     for expected_char in literal.chars() {
         if expected_char != chars[*index] {
             return Err(TokenizeError::UnfinishedLiteralValue);
@@ -110,9 +115,10 @@ fn tokenize_float(chars: &[char], index: &mut usize) -> Result<Token, TokenizeEr
     }
     // 回退一个字符
     *index -= 1;
-    let num = unparsed_num.parse()
-        .map(|f| Token::Number(f))
-        .map_err(|err| TokenizeError::ParseNumberError(err))?;
+    let num = unparsed_num
+        .parse()
+        .map(Token::Number)
+        .map_err(TokenizeError::ParseNumberError)?;
     Ok(num)
 }
 
@@ -240,3 +246,4 @@ mod tests {
         assert_eq!(actual, expected);
     }
 }
+
