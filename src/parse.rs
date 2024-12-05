@@ -1,9 +1,9 @@
-use std::collections::HashMap;
 use crate::tokenize::Token;
 use crate::value::Value;
+use std::collections::HashMap;
 
 #[derive(Debug, PartialEq)]
-pub enum TokenParseError{
+pub enum TokenParseError {
     /// 转义序列在没有4个十六进制数字的情况下启动
     UnfinishedEscape,
     /// 转义序列中的字符不是有效的十六进制字符
@@ -12,14 +12,15 @@ pub enum TokenParseError{
     InvalidCodePointValue,
     ExpectedComma,
     ExpectedProperty,
-    ExpectedColon
+    ExpectedColon,
 }
 
 type ParseResult = Result<Value, TokenParseError>;
 
 pub fn parse_tokens(tokens: &[Token], index: &mut usize) -> ParseResult {
     let token = &tokens[*index];
-    if matches!(token,
+    if matches!(
+        token,
         Token::Null | Token::False | Token::True | Token::Number(_) | Token::String(_)
     ) {
         *index += 1;
@@ -32,7 +33,7 @@ pub fn parse_tokens(tokens: &[Token], index: &mut usize) -> ParseResult {
         Token::String(string) => parse_string(string),
         Token::LeftBracket => parse_array(tokens, index),
         Token::LeftBrace => parse_object(tokens, index),
-        _ => todo!()
+        _ => todo!(),
     }
 }
 
@@ -60,12 +61,15 @@ fn unescape_string(input: &str) -> Result<String, TokenParseError> {
                     let mut sum = 0;
                     for i in 0..4 {
                         let next_char = chars.next().ok_or(TokenParseError::UnfinishedEscape)?;
-                        let digit = next_char.to_digit(16).ok_or(TokenParseError::InvalidHexValue)?;
+                        let digit = next_char
+                            .to_digit(16)
+                            .ok_or(TokenParseError::InvalidHexValue)?;
                         sum += (16u32).pow(3 - i) * digit;
                     }
-                    let unescaped_char = char::from_u32(sum).ok_or(TokenParseError::InvalidCodePointValue)?;
+                    let unescaped_char =
+                        char::from_u32(sum).ok_or(TokenParseError::InvalidCodePointValue)?;
                     output.push(unescaped_char);
-                },
+                }
                 _ => output.push(next_char),
             }
             is_escaping = false;
@@ -90,9 +94,9 @@ fn parse_array(tokens: &[Token], index: &mut usize) -> ParseResult {
 
         let token = &tokens[*index];
         match token {
-            Token::Comma => {},
+            Token::Comma => {}
             Token::RightBracket => break,
-            _ => return Err(TokenParseError::ExpectedComma)
+            _ => return Err(TokenParseError::ExpectedComma),
         }
     }
     *index += 1;
@@ -116,16 +120,16 @@ fn parse_object(tokens: &[Token], index: &mut usize) -> ParseResult {
                 let value = parse_tokens(tokens, index)?;
                 map.insert(key, value);
             } else {
-                return Err(TokenParseError::ExpectedColon)
+                return Err(TokenParseError::ExpectedColon);
             }
             // 在键值对后面的是 Comma 或 RightBrace
             match &tokens[*index] {
-                Token::Comma => {},
+                Token::Comma => {}
                 Token::RightBrace => break,
                 _ => return Err(TokenParseError::ExpectedComma),
             }
         } else {
-            return Err(TokenParseError::ExpectedProperty)
+            return Err(TokenParseError::ExpectedProperty);
         }
     }
     // 消费右括号
@@ -135,9 +139,9 @@ fn parse_object(tokens: &[Token], index: &mut usize) -> ParseResult {
 }
 #[cfg(test)]
 mod tests {
-    use std::collections::HashMap;
     use crate::tokenize::Token;
     use crate::value::Value;
+    use std::collections::HashMap;
 
     use super::parse_tokens;
 

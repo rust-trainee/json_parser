@@ -1,15 +1,15 @@
-mod tokenize;
 mod parse;
+mod tokenize;
 mod value;
 
-use crate::tokenize::{tokenize, TokenizeError};
 use crate::parse::{parse_tokens, TokenParseError};
+use crate::tokenize::{tokenize, TokenizeError};
 use crate::value::Value;
 
 #[derive(Debug, PartialEq)]
 pub enum ParseError {
     TokenizeError(TokenizeError),
-    TokenParseError(TokenParseError)
+    TokenParseError(TokenParseError),
 }
 
 impl From<TokenParseError> for ParseError {
@@ -26,7 +26,7 @@ impl From<TokenizeError> for ParseError {
 
 pub fn parse(input: &str) -> Result<Value, ParseError> {
     let tokens = tokenize(input)?;
-    let value = parse_tokens(&tokens,&mut 0)?;
+    let value = parse_tokens(&tokens, &mut 0)?;
     Ok(value)
 }
 
